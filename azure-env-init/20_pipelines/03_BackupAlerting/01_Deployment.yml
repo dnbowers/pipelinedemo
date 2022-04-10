@@ -1,0 +1,8 @@
+variables:
+  ##production
+  enable_production: false
+  teardownEnvironment_production: false
+
+  #deployment info
+  deployment_reason: "regular"
+  deployment_id: "dev-work-20210208-b"

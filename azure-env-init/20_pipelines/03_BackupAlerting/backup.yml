@@ -1,0 +1,47 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - /azure-env-init/10_projects/03_BackupAlerting
+      - /azure-env-init/20_pipelines/03_BackupAlerting
+      - /azure-env-init/env/03_BackupAlerting
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - /azure-env-init/10_projects/03_BackupAlerting
+      - /azure-env-init/20_pipelines/03_BackupAlerting
+      - /azure-env-init/env/03_BackupAlerting
+
+pool:
+  vmImage: "ubuntu-latest"
+
+variables:
+  - template: 01_Deployment.yml
+  - template: 02_backup-vars-production.yml
+
+## Anything below should not be modified ##
+stages:
+  ##Production
+  - template: ../Common/azure-deployment.yml
+    parameters:
+      environment_name: "Production"
+      tf_workingfolder: ${{ variables.tfWorkingFolder }}
+      stage_name: "Production"
+      deployment_jobname: "Deployment_Production"
+      teardown_jobname: "Teardown_Production"
+      teardown_environment: ${{ variables.teardownEnvironment_production }}
+      service_connectionname: ${{ variables.serviceConnectionName_production }}
+      tf_stateresourcegroupname: ${{ variables.tfStateResourceGroupName_production }}
+      tf_statestorageaccountname: ${{ variables.tfStateStorageAccountName_production }}
+      tf_statecontainername: ${{ variables.tfStateContainerName_production }}
+      tf_statefile: ${{ variables.tfStateFile_production }}
+      env_configuration: ${{ variables.envConfiguration_production }}
+      enable_stage: ${{ variables.enable_production }}
+      agent_pool: ${{ variables.agent_pool_production }}
+      enable_apply: ${{ variables.enable_apply_production }}

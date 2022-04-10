@@ -1,0 +1,109 @@
+parameters:
+  - name: teardownJobName
+    default: ""
+    type: string
+
+  - name: teardownEnvironment
+    default: false
+    type: boolean
+
+  - name: serviceConnectionName
+    default: ""
+    type: string
+
+  - name: tfStateResourceGroupName
+    default: ""
+    type: string
+
+  - name: tfStateStorageAccountName
+    default: ""
+    type: string
+
+  - name: tfStateContainerName
+    default: ""
+    type: string
+
+  - name: tfStateFile
+    default: ""
+    type: string
+
+  - name: tfWorkingFolder
+    default: ""
+    type: string
+
+  - name: envConfiguration
+    default: ""
+    type: string
+  
+  - name: enableApply
+    default: false
+    type: boolean
+
+  - name: stageName
+    default: ""
+    type: string
+
+  - name: agentPool
+    default: ""
+    type: string
+
+  - name: deploymentJobName
+    default: ""
+    type: string
+
+  - name: environment
+    default: ""
+    type: string
+
+  - name: enable
+    default: true
+
+stages:
+  - stage: ${{ parameters.stageName }}
+    condition: always()
+    displayName: ${{ parameters.stageName }}
+    #pool: ${{ parameters.agentPool }}
+    jobs:
+      - job: ${{ parameters.teardownJobName }}
+        condition: and(eq(variables['build.sourceBranch'], 'refs/heads/main'), eq('${{ parameters.teardownEnvironment }}', true), eq('${{ parameters.enable }}', true))
+        steps:
+          - template: tf-tasks-common.yml
+            parameters:
+              serviceConnectionName: ${{ parameters.serviceConnectionName }}
+              tfStateResourceGroupName: ${{ parameters.tfStateResourceGroupName }}
+              tfStateStorageAccountName: ${{ parameters.tfStateStorageAccountName }}
+              tfStateContainerName: ${{ parameters.tfStateContainerName }}
+              tfStateFile: ${{ parameters.tfStateFile }}
+              tfWorkingFolder: ${{ parameters.tfWorkingFolder }}
+              envConfiguration: ${{ parameters.envConfiguration }}
+              teardownEnvironment: ${{ parameters.teardownEnvironment }}
+          - task: TerraformTaskV1@0
+            displayName: "Remove Infrastructure"
+            inputs:
+              provider: "azurerm"
+              command: "destroy"
+              environmentServiceNameAzureRM: ${{ parameters.serviceConnectionName }}
+              workingDirectory: ${{ parameters.tfWorkingFolder }}
+              commandOptions: '--auto-approve -var-file="${{ parameters.envConfiguration }}"'
+      - job: ${{ parameters.deploymentJobName }}
+        condition: and(eq(variables['build.sourceBranch'], 'refs/heads/main'), eq('${{ parameters.teardownEnvironment }}', false), eq('${{ parameters.enable }}', true))
+        steps:
+          - template: tf-tasks-common.yml
+            parameters:
+              serviceConnectionName: ${{ parameters.serviceConnectionName }}
+              tfStateResourceGroupName: ${{ parameters.tfStateResourceGroupName }}
+              tfStateStorageAccountName: ${{ parameters.tfStateStorageAccountName }}
+              tfStateContainerName: ${{ parameters.tfStateContainerName }}
+              tfStateFile: ${{ parameters.tfStateFile }}
+              tfWorkingFolder: ${{ parameters.tfWorkingFolder }}
+              envConfiguration: ${{ parameters.envConfiguration }}
+              teardownEnvironment: ${{ parameters.teardownEnvironment }}
+          - task: TerraformTaskV1@0
+            displayName: "Deploy Infrastructure"
+            inputs:
+              provider: "azurerm"
+              command: "apply"
+              environmentServiceNameAzureRM: ${{ parameters.serviceConnectionName }}
+              workingDirectory: ${{ parameters.tfWorkingFolder }}
+              commandOptions: '--auto-approve -var-file="${{ parameters.envConfiguration }}"'
+            enabled: ${{ parameters.enableApply }}

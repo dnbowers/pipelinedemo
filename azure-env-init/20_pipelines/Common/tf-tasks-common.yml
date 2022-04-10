@@ -1,0 +1,84 @@
+parameters:
+  - name: serviceConnectionName
+    default: ""
+    type: string
+
+  - name: tfStateResourceGroupName
+    default: ""
+    type: string
+
+  - name: tfStateStorageAccountName
+    default: ""
+    type: string
+
+  - name: tfStateContainerName
+    default: ""
+    type: string
+
+  - name: tfStateFile
+    default: ""
+    type: string
+
+  - name: tfWorkingFolder
+    default: ""
+    type: string
+
+  - name: envConfiguration
+    default: ""
+    type: string
+
+  - name: teardownEnvironment
+    default: false
+    type: boolean
+
+steps:
+  - task: TerraformInstaller@0
+    displayName: "Install Terraform libraries"
+    inputs:
+      terraformVersion: "0.13.5"      
+
+  - task: TerraformTaskV1@0
+    displayName: "Initialise Terraform"
+    inputs:
+      provider: "azurerm"
+      command: "init"
+      backendServiceArm: ${{ parameters.serviceConnectionName }}
+      workingDirectory: ${{ parameters.tfWorkingFolder }}
+      backendAzureRmResourceGroupName: ${{ parameters.tfStateResourceGroupName }}
+      backendAzureRmStorageAccountName: ${{ parameters.tfStateStorageAccountName }}
+      backendAzureRmContainerName: ${{ parameters.tfStateContainerName }}
+      backendAzureRmKey: ${{ parameters.tfStateFile }}
+
+  - task: TerraformTaskV1@0
+    condition: eq('${{ parameters.teardownEnvironment }}', false)
+    displayName: "Plan Terraform Action"
+    inputs:
+      provider: "azurerm"
+      command: "plan"
+      environmentServiceNameAzureRM: ${{ parameters.serviceConnectionName }}
+      workingDirectory: ${{ parameters.tfWorkingFolder }}
+      commandOptions: '-out plan.out -var-file="${{ parameters.envConfiguration }}"'
+    enabled: true
+
+  - task: AzureCLI@2
+    displayName : "Terraform Compliance"
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnectionName }}
+      scriptType: bash
+      scriptLocation: 'inlineScript'
+      workingDirectory: ${{ parameters.tfWorkingFolder }}
+      inlineScript: |
+        pwd
+        IFS=/ 
+        var=($PWD)   
+        if [ "$HOSTNAME" == "ado-sh-build-1" ]; then
+        path=$(find /home/azureuser/myagent/_work/"${var[5]}"/"${var[6]}"/ -type d -name "features" -printf "$pwd/%p\n"| sort -r | head -n 1)
+        else
+        path=$(find /agent/_work/"${var[3]}"/"${var[4]}"/ -type d -name "features" -printf "$pwd/%p\n"| sort -r | head -n 1)
+        fi
+        #terraform-compliance -f "$path" -p plan.out   
+    enabled: true
+    
+    # terraform-compliance -f ../../../20_pipelines/features/ -p plan.out   
+    #  path=$(find /home/azureuser/myagent/_work/"${var[5]}"/"${var[6]}"/ -type d -name "features" -printf "$pwd/%p\n"| sort -r | head -n 1) # This is for ubuntu agents(VM)
+    # path=$(find /agent/_work/"${var[3]}"/"${var[4]}"/ -type d -name "features" -printf "$pwd/%p\n"| sort -r | head -n 1)   # This is for VMSS

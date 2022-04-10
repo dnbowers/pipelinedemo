@@ -1,0 +1,10 @@
+variables:
+  serviceConnectionName_production: "cb-mgmt-arm-connection" 
+  tfStateResourceGroupName_production: "cb-tfstates"
+  tfStateStorageAccountName_production: "tfstate4kl0e"
+  tfStateContainerName_production: "tfstates"
+  tfWorkingFolder: "$(System.DefaultWorkingDirectory)/azure-env-init/10_projects/03_BackupAlerting" 
+  tfStateFile_production: "backup-alerting.tfstate"
+  envConfiguration_production: "../../../azure-env-init/env/03_BackupAlerting/01_backup_alerting.tfvars"
+  #agent_pool_production: ""
+  enable_apply_production: false

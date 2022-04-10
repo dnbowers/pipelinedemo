@@ -1,0 +1,65 @@
+parameters:
+  - name: tf_workingfolder
+    default: ""
+    type: string
+  - name: stage_name
+    default: ""
+    type: string
+  - name: teardown_jobname
+    default: ""
+    type: string
+  - name: deployment_jobname
+    default: ""
+    type: string
+  - name: teardown_environment
+    default: ""
+    type: string
+  - name: service_connectionname
+    default: ""
+    type: string
+  - name: tf_stateresourcegroupname
+    default: ""
+    type: string
+  - name: tf_statestorageaccountname
+    default: ""
+    type: string
+  - name: tf_statecontainername
+    default: ""
+    type: string
+  - name: environment_name
+    default: "None"
+    type: string
+  - name: tf_statefile
+    default: ""
+    type: string
+  - name: env_configuration
+    default: ""
+    type: string
+  - name: enable_stage
+    default: false
+  - name: agent_pool
+    default: ""
+    type: string
+  - name: enable_apply
+    default: false
+    type: boolean
+
+stages:
+  - template: azure-cb.yml
+    parameters:
+      environment: ${{ parameters.environment_name }}
+      tfWorkingFolder: ${{ parameters.tf_workingfolder }}
+      stageName: ${{ parameters.stage_name }}
+      teardownJobName: ${{ parameters.teardown_jobname }}
+      deploymentJobName: ${{ parameters.deployment_jobname }}
+      teardownEnvironment: ${{ parameters.teardown_environment }}
+      serviceConnectionName: ${{ parameters.service_connectionname }}
+      tfStateResourceGroupName: ${{ parameters.tf_stateresourcegroupname }}
+      tfStateStorageAccountName: ${{ parameters.tf_statestorageaccountname }}
+      tfStateContainerName: ${{ parameters.tf_statecontainername }}
+      tfStateFile: ${{ parameters.tf_statefile }}
+      envConfiguration: ${{ parameters.env_configuration }}
+      enable: ${{ parameters.enable_stage }}
+      #agentPool: ${{ parameters.agent_pool }}
+      enableApply: ${{ parameters.enable_apply }}
+      
